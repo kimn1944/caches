@@ -6,14 +6,14 @@ module MIPS (
 
     input RESET,
     input CLK,
-    
+
     //The physical memory address we want to interact with
     output [31:0] data_address_2DM,
     //We want to perform a read?
     output MemRead_2DM,
     //We want to perform a write?
     output MemWrite_2DM,
-    
+
     //Data being read
     input [31:0] data_read_fDM,
     //Data being written
@@ -24,7 +24,7 @@ module MIPS (
         // 3 bytes: 3
         // 4 bytes: 0
     output [1:0] data_write_size_2DM,
-    
+
     //Data being read
     input [255:0] block_read_fDM,
     //Data being written
@@ -37,10 +37,10 @@ module MIPS (
     input block_read_fDM_valid,
     //Block write is successful
     input block_write_fDM_valid,
-    
+
     //Instruction to fetch
     output [31:0] Instr_address_2IM,
-    //Instruction fetched at Instr_address_2IM    
+    //Instruction fetched at Instr_address_2IM
     input [31:0] Instr1_fIM,
     //Instruction fetched at Instr_address_2IM+4 (if you want superscalar)
     input [31:0] Instr2_fIM,
@@ -51,13 +51,13 @@ module MIPS (
     input block_read_fIM_valid,
     //Request a block read
     output iBlkRead,
-    
+
     //Tell the simulator that everything's ready to go to process a syscall.
-    //Make sure that all register data is flushed to the register file, and that 
+    //Make sure that all register data is flushed to the register file, and that
     //all data cache lines are flushed and invalidated.
     output SYS
     );
-    
+
 
 //Connecting wires between IF and ID
     wire [31:0] Instr1_IFID;
@@ -66,13 +66,13 @@ module MIPS (
     wire        STALL_IDIF;
     wire        Request_Alt_PC_IDIF;
     wire [31:0] Alt_PC_IDIF;
-    
-    
+
+
 //Connecting wires between IC and IF
     wire [31:0] Instr_address_2IC/*verilator public*/;
-    //Instr_address_2IC is verilator public so that sim_main can give accurate 
+    //Instr_address_2IC is verilator public so that sim_main can give accurate
     //displays.
-    //We could use Instr_address_2IM, but this way sim_main doesn't have to 
+    //We could use Instr_address_2IM, but this way sim_main doesn't have to
     //worry about whether or not a cache is present.
     wire [31:0] Instr1_fIC;
     wire [31:0] Instr2_fIC;
@@ -94,6 +94,10 @@ module MIPS (
     assign unused_i3 = Instr2_fIC;
 `endif
 
+        // *********************************************************************
+wire stall;
+        // *********************************************************************
+
     IF IF(
         .CLK(CLK),
         .RESET(RESET),
@@ -104,14 +108,17 @@ module MIPS (
         .Request_Alt_PC(Request_Alt_PC_IDIF),
         .Alt_PC(Alt_PC_IDIF),
         .Instr_address_2IM(Instr_address_2IC),
-        .Instr1_fIM(Instr1_fIC)
+        .Instr1_fIM(Instr1_fIC),
+        // *********************************************************************
+        .stall(stall)
+        // *********************************************************************
     );
-    
+
 
     wire [4:0]  WriteRegister1_MEMWB;
 	wire [31:0] WriteData1_MEMWB;
 	wire        RegWrite1_MEMWB;
-	
+
 	wire [31:0] Instr1_IDEXE;
     wire [31:0] Instr1_PC_IDEXE;
 	wire [31:0] OperandA1_IDEXE;
@@ -127,18 +134,18 @@ module MIPS (
     wire        MemRead1_IDEXE;
     wire        MemWrite1_IDEXE;
     wire [4:0]  ShiftAmount1_IDEXE;
-    
+
 `ifdef HAS_FORWARDING
     wire [4:0]  BypassReg1_EXEID;
     wire [31:0] BypassData1_EXEID;
     wire        BypassValid1_EXEID;
-    
+
     wire [4:0]  BypassReg1_MEMID;
     wire [31:0] BypassData1_MEMID;
     wire        BypassValid1_MEMID;
 `endif
-    
-	
+
+
 	ID ID(
 		.CLK(CLK),
 		.RESET(RESET),
@@ -179,9 +186,12 @@ module MIPS (
 		.BypassValid1_MEMID(BypassValid1_MEMID),
 `endif
 		.SYS(SYS),
-		.WANT_FREEZE(STALL_IDIF)
+		.WANT_FREEZE(STALL_IDIF),
+    // *********************************************************************
+    .stall(stall)
+    // *********************************************************************
 	);
-	
+
 	wire [31:0] Instr1_EXEMEM;
 	wire [31:0] Instr1_PC_EXEMEM;
 	wire [31:0] ALU_result1_EXEMEM;
@@ -195,7 +205,7 @@ module MIPS (
     wire [31:0] ALU_result_async1;
     wire        ALU_result_async_valid1;
 `endif
-	
+
 	EXE EXE(
 		.CLK(CLK),
 		.RESET(RESET),
@@ -233,14 +243,17 @@ module MIPS (
 		.ALU_result_async1(ALU_result_async1),
 		.ALU_result_async_valid1(ALU_result_async_valid1)
 `endif
+    // *********************************************************************
+    ,.stall(stall)
+    // *********************************************************************
 	);
-	
+
 `ifdef HAS_FORWARDING
     assign BypassReg1_EXEID = WriteRegister1_IDEXE;
     assign BypassData1_EXEID = ALU_result_async1;
     assign BypassValid1_EXEID = ALU_result_async_valid1;
 `endif
-     
+
     wire [31:0] data_write_2DC/*verilator public*/;
     wire [31:0] data_address_2DC/*verilator public*/;
     wire [1:0]  data_write_size_2DC/*verilator public*/;
@@ -259,7 +272,7 @@ module MIPS (
     assign MemRead_2DM = read_2DC;
     assign MemWrite_2DM = write_2DC;
     assign data_valid_fDC = 1'b1;
-     
+
     assign dBlkRead = 1'b0;
     assign dBlkWrite = 1'b0;
     assign block_write_2DM = block_read_fDM;
@@ -269,7 +282,7 @@ module MIPS (
     /*verilator lint_on UNUSED*/
     assign unused_d1 = block_read_fDM_valid;
     assign unused_d2 = block_write_fDM_valid;
-     
+
     MEM MEM(
         .CLK(CLK),
         .RESET(RESET),
@@ -295,11 +308,14 @@ module MIPS (
         ,
         .WriteData1_async(BypassData1_MEMID)
 `endif
+        // *********************************************************************
+        ,.stall(stall)
+        // *********************************************************************
     );
-     
+
 `ifdef HAS_FORWARDING
     assign BypassReg1_MEMID = WriteRegister1_EXEMEM;
     assign BypassValid1_MEMID = RegWrite1_EXEMEM;
 `endif
-    
+
 endmodule
