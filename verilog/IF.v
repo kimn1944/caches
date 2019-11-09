@@ -46,8 +46,15 @@ module  IF
 `endif
 
 // *****************************************************************************
-reg [3:0] ring;
-assign stall = ~ring[0];
+DELAYER a(
+    .clk(CLK),
+    .reset(RESET),
+    .stall(0),
+    .delay(Request_Alt_PC),
+    .stop(stop));
+
+wire stop;
+assign stall = 0;
 // *****************************************************************************
 
 always @(posedge CLK or negedge RESET) begin
@@ -55,27 +62,20 @@ always @(posedge CLK or negedge RESET) begin
         Instr1_OUT <= 0;
         Instr_PC_OUT <= 0;
         Instr_PC_Plus4 <= 32'hBFC00000;
-        ring <= 4'b0001;
         $display("FETCH [RESET] Fetching @%x", Instr_PC_Plus4);
     end else if(CLK) begin
         if(!STALL) begin
-            if(ring[0]) begin
-                Instr1_OUT <= Instr1_fIM;
-                Instr_PC_OUT <= Instr_address_2IM;
-                ring <= {ring[2:0], ring[3]};
-                `ifdef INCLUDE_IF_CONTENT
-                Instr_PC_Plus4 <= Instr_address_2IM + IncrementAmount;
-                $display("FETCH:Instr@%x=%x;Next@%x",Instr_address_2IM,Instr1_fIM,Instr_address_2IM + IncrementAmount);
-                $display("FETCH:ReqAlt[%d]=%x",Request_Alt_PC,Alt_PC);
-                `else
-                /* You should probably assign something to Instr_PC_Plus4. */
-                $display("FETCH:Instr@%x=%x;Next@%x",Instr_address_2IM,Instr1_fIM,Instr_address_2IM + IncrementAmount);
-                $display("FETCH:ReqAlt[%d]=%x",Request_Alt_PC,Alt_PC);
-                `endif
-            end
-            else begin
-                ring <= {ring[2:0], ring[3]};
-            end
+            Instr1_OUT <= Instr1_fIM;
+            Instr_PC_OUT <= Instr_address_2IM;
+            `ifdef INCLUDE_IF_CONTENT
+            Instr_PC_Plus4 <= Instr_address_2IM + IncrementAmount;
+            $display("FETCH:Instr@%x=%x;Next@%x",Instr_address_2IM,Instr1_fIM,Instr_address_2IM + IncrementAmount);
+            $display("FETCH:ReqAlt[%d]=%x",Request_Alt_PC,Alt_PC);
+            `else
+            /* You should probably assign something to Instr_PC_Plus4. */
+            $display("FETCH:Instr@%x=%x;Next@%x",Instr_address_2IM,Instr1_fIM,Instr_address_2IM + IncrementAmount);
+            $display("FETCH:ReqAlt[%d]=%x",Request_Alt_PC,Alt_PC);
+            `endif
         end
         else begin
             $display("FETCH: Stalling; next request will be %x",Instr_address_2IM);
