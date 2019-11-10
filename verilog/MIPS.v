@@ -45,18 +45,17 @@ module MIPS (
     //Instruction fetched at Instr_address_2IM+4 (if you want superscalar)
     input [31:0] Instr2_fIM,
 
-    //Cache block of instructions fetched
+    // Cache block of instructions fetched
     input [255:0] block_read_fIM,
-    //Block read is successfull
+    // //Block read is successfull
     input block_read_fIM_valid,
-    //Request a block read
+    // //Request a block read
     output iBlkRead,
 
     //Tell the simulator that everything's ready to go to process a syscall.
     //Make sure that all register data is flushed to the register file, and that
     //all data cache lines are flushed and invalidated.
-    output SYS
-    );
+    output SYS);
 
 
 //Connecting wires between IF and ID
@@ -78,24 +77,36 @@ module MIPS (
     wire [31:0] Instr2_fIC;
     assign Instr_address_2IM = Instr_address_2IC;
     assign Instr1_fIC = Instr1_fIM;
-    assign Instr2_fIC = Instr2_fIM;
-    assign iBlkRead = 1'b0;
+    // assign Instr2_fIC = Instr2_fIM;
+    // assign iBlkRead = 1'b0;
     /*verilator lint_off UNUSED*/
-    wire [255:0] unused_i1;
-    wire unused_i2;
+    // wire [255:0] unused_i1;
+    // wire unused_i2;
     /*verilator lint_on UNUSED*/
-    assign unused_i1 = block_read_fIM;
-    assign unused_i2 = block_read_fIM_valid;
+    // assign unused_i1 = block_read_fIM;
+    // assign unused_i2 = block_read_fIM_valid;
 `ifdef SUPERSCALAR
 `else
     /*verilator lint_off UNUSED*/
-    wire [31:0] unused_i3;
+    // wire [31:0] unused_i3;
     /*verilator lint_on UNUSED*/
-    assign unused_i3 = Instr2_fIC;
+    // assign unused_i3 = Instr2_fIC;
 `endif
 
         // *********************************************************************
-wire stall;
+    wire stall;
+    IC #() IC
+        (.clk(CLK),
+        .reset(RESET),
+        .stall(STALL_IDIF),
+        .data_addr(Instr_address_2IC),
+        .is_read(1),
+        .requested_data(),
+        .request_addr(),
+        .stop(stall),
+        .hit(),
+        .data());
+
         // *********************************************************************
 
     IF IF(
@@ -104,13 +115,13 @@ wire stall;
         .Instr1_OUT(Instr1_IFID),
         .Instr_PC_OUT(Instr_PC_IFID),
         .Instr_PC_Plus4(Instr_PC_Plus4_IFID),
-        .STALL(STALL_IDIF),
+        .STALL(STALL_IDIF | stall),
         .Request_Alt_PC(Request_Alt_PC_IDIF),
         .Alt_PC(Alt_PC_IDIF),
         .Instr_address_2IM(Instr_address_2IC),
         .Instr1_fIM(Instr1_fIC),
         // *********************************************************************
-        .stall(stall)
+        .stall()
         // *********************************************************************
     );
 
@@ -273,15 +284,15 @@ wire stall;
     assign MemWrite_2DM = write_2DC;
     assign data_valid_fDC = 1'b1;
 
-    assign dBlkRead = 1'b0;
-    assign dBlkWrite = 1'b0;
-    assign block_write_2DM = block_read_fDM;
+    // assign dBlkRead = 1'b0;
+    // assign dBlkWrite = 1'b0;
+    // assign block_write_2DM = block_read_fDM;
     /*verilator lint_off UNUSED*/
-    wire unused_d1;
-    wire unused_d2;
+    // wire unused_d1;
+    // wire unused_d2;
     /*verilator lint_on UNUSED*/
-    assign unused_d1 = block_read_fDM_valid;
-    assign unused_d2 = block_write_fDM_valid;
+    // assign unused_d1 = block_read_fDM_valid;
+    // assign unused_d2 = block_write_fDM_valid;
 
     MEM MEM(
         .CLK(CLK),
