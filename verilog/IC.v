@@ -60,7 +60,7 @@ module IC
             switch                <= switch + 1;
             ring                  <= {1'b1, ring[8:1]};
             cache[idx][272:256]   <= tag;
-            cache[idx][(switch) * 32 +:32]  <= requested_data;
+            cache[idx][switch * 32 +:32]  <= requested_data;
             cache[idx][273] <= 1;
         end
     end
@@ -77,7 +77,7 @@ module IC
     always @(posedge clk or negedge reset) begin
         if(!reset) begin
             for(i = 0; i < 1024; i = i + 1) begin
-                cache[273] = 0;
+                cache[i][273] = 0;
             end
         end
         `ifdef IC_PRINT
