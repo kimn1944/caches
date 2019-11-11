@@ -76,8 +76,8 @@ module MIPS (
     wire [31:0] Instr1_fIC;
     wire [31:0] Instr2_fIC;
     // *************************************************************************
-    assign Instr_address_2IM = Instr_address_2IC;
-    assign Instr1_fIC = Instr1_fIM;
+    // assign Instr_address_2IM = Instr_address_2IC;
+    // assign Instr1_fIC = Instr1_fIM;
     // *************************************************************************
     // assign Instr2_fIC = Instr2_fIM;
     // assign iBlkRead = 1'b0;
@@ -102,12 +102,10 @@ module MIPS (
         .reset(RESET),
         .stall(STALL_IDIF),
         .data_addr(Instr_address_2IC),
-        .is_read(1),
         .requested_data(Instr1_fIM),
-        .request_addr(),
+        .request_addr(Instr_address_2IM),
         .stop(stall),
-        .hit(),
-        .data());
+        .data(Instr1_fIC));
 
         // *********************************************************************
 

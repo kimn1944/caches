@@ -24,4 +24,4 @@
 
 // my configs
 // `define DELAYER_PRINT
-`define IC_PRINT
+// `define IC_PRINT
