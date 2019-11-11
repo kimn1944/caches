@@ -78,14 +78,13 @@ module ID(
     input [31:0]    BypassData1_MEMID,
     input               BypassValid1_MEMID,
 `endif
-
+	//********************************************************************
+     input stall_IC,
+    //********************************************************************
 	 //Tell the simulator to process a system call
 	 output reg SYS,
 	 //Tell fetch to stop advancing the PC, and wait.
-	 output WANT_FREEZE,
-   // *********************************************************************
-   input stall
-   // *********************************************************************
+	 output WANT_FREEZE
     );
 
 	 wire [5:0]	ALU_control1;	//async. ALU_Control output
@@ -296,8 +295,7 @@ always @(posedge CLK or negedge RESET) begin
 		FORCE_FREEZE <= 0;
 		INHIBIT_FREEZE <= 0;
 	$display("ID:RESET");
-	end
-  else if(!stall) begin
+	end else if (!stall_IC) begin
             Alt_PC <= Alt_PC1;
             Request_Alt_PC <= Request_Alt_PC1;
 			//$display("ID:evaluation SBC=%d; syscal1=%d",syscall_bubble_counter,syscal1);
@@ -372,6 +370,22 @@ always @(posedge CLK or negedge RESET) begin
                 //$display("ID1:A:Reg[%d]=%x; B:Reg[%d]=%x; Write?%d to %d",RegA1, OpA1, RegB1, OpB1, (WriteRegister1!=5'd0)?RegWrite1:1'd0, WriteRegister1);
                 //$display("ID1:ALU_Control=%x; MemRead=%d; MemWrite=%d (%x); ShiftAmount=%d",ALU_control1, MemRead1, MemWrite1, MemWriteData1, shiftAmount1);
 			end
+	end else begin
+		$display("ID1:Instr=%x,Instr_PC=%x,Req_Alt_PC=%d:Alt_PC=%x;SYS=%d(%d)",Instr1_IN,Instr_PC_IN,Request_Alt_PC1,Alt_PC1,syscal1,syscall_bubble_counter);
+/*
+			Instr1_OUT <= 0;//(Instr1_IN==32'hc)?Instr1_IN:0; //We need to propagate the syscall to MEM to flush the cache!
+			OperandA1_OUT <= 0;
+			OperandB1_OUT <= 0;
+			ReadRegisterA1_OUT <= 0;
+			ReadRegisterB1_OUT <= 0;
+			WriteRegister1_OUT <= 0;
+			MemWriteData1_OUT <= 0;
+			RegWrite1_OUT <= 0;
+			ALU_Control1_OUT <= 0;//(Instr1_IN==32'hc)?ALU_control1:0;
+			MemRead1_OUT <= 0;
+			MemWrite1_OUT <= 0;
+			ShiftAmount1_OUT <= 0;*/
+			SYS <= 0;
 	end
 end
 

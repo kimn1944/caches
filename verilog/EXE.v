@@ -69,9 +69,9 @@ module EXE(
     output reg MemRead1_OUT,
     //We need to write to MEM (passed to MEM)
     output reg MemWrite1_OUT,
-    // *********************************************************************
-    input stall
-    // *********************************************************************
+	//********************************************************************
+     input stall_IC
+    //********************************************************************
 
 `ifdef HAS_FORWARDING
     ,
@@ -85,7 +85,6 @@ module EXE(
 	 output [31:0] ALU_result_async1,
 	 output ALU_result_async_valid1
 `endif
-
     );
 
 
@@ -148,10 +147,7 @@ ALU ALU1(
     .B(B1),
     .ALU_control(ALU_Control1_IN),
     .shiftAmount(ShiftAmount1_IN),
-    .CLK(!CLK),
-    // *********************************************************************
-    .stall(stall)
-    // *********************************************************************
+    .CLK(!CLK)
     );
 
 
@@ -189,7 +185,7 @@ always @(posedge CLK or negedge RESET) begin
 		MemRead1_OUT <= 0;
 		MemWrite1_OUT <= 0;
 		$display("EXE:RESET");
-	end else if(!stall) begin
+	end else if(CLK & !stall_IC) begin
        HI <= new_HI;
        LO <= new_LO;
             Instr1_OUT <= Instr1_IN;

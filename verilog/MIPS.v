@@ -75,8 +75,10 @@ module MIPS (
     //worry about whether or not a cache is present.
     wire [31:0] Instr1_fIC;
     wire [31:0] Instr2_fIC;
+    // *************************************************************************
     assign Instr_address_2IM = Instr_address_2IC;
     assign Instr1_fIC = Instr1_fIM;
+    // *************************************************************************
     // assign Instr2_fIC = Instr2_fIM;
     // assign iBlkRead = 1'b0;
     /*verilator lint_off UNUSED*/
@@ -101,7 +103,7 @@ module MIPS (
         .stall(STALL_IDIF),
         .data_addr(Instr_address_2IC),
         .is_read(1),
-        .requested_data(),
+        .requested_data(Instr1_fIM),
         .request_addr(),
         .stop(stall),
         .hit(),
@@ -199,7 +201,7 @@ module MIPS (
 		.SYS(SYS),
 		.WANT_FREEZE(STALL_IDIF),
     // *********************************************************************
-    .stall(stall)
+    .stall_IC(stall)
     // *********************************************************************
 	);
 
@@ -255,7 +257,7 @@ module MIPS (
 		.ALU_result_async_valid1(ALU_result_async_valid1)
 `endif
     // *********************************************************************
-    ,.stall(stall)
+    ,.stall_IC(stall)
     // *********************************************************************
 	);
 
@@ -320,7 +322,7 @@ module MIPS (
         .WriteData1_async(BypassData1_MEMID)
 `endif
         // *********************************************************************
-        ,.stall(stall)
+        ,.stall_IC(stall)
         // *********************************************************************
     );
 

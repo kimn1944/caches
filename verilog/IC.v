@@ -71,7 +71,7 @@ module IC
             switch        <= switch + 1;
             // writing
             cache[idx][272:256]   <= tag;
-            cache[idx][wrt_ofst +:32]  <= requested_data;
+            cache[idx][wrt_ofst +:32]  <= request_addr;
             cache[idx][273] <= 1;
         end
         else begin
@@ -89,7 +89,7 @@ module IC
             hit   <= 0;
             data  <= 0;
         end
-        else if(is_read & !stop & !stall) begin
+        else if(is_read & !del_stop & !stall) begin
             invalid <= ~cache_valid;
             // stop  <= del_stop;
             hit   <= cache_valid;
@@ -102,6 +102,9 @@ module IC
             $display("Stop: %x, Hit: %x", stop, hit);
             $display("Idx: %x, Tag: %x, Ofst: %x", idx, tag, ofst);
             $display("Cache Val: %x, Cache Data: %x, Cache Tag: %x, Cache Ofst: %d", cache_valid, cache_data, cache_tag, cache_ofst);
+            $display("Wrt Ofst: %d ", wrt_ofst);
+            $display("Addr: %b", data_addr);
+            $display("Cache: %x", cache[idx]);
             $display("\t\t\t\tIC End");
         `endif
 

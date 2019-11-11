@@ -52,14 +52,15 @@ module MEM(
     input [31:0] data_read_fDM,
 	 output MemRead_2DM,
 	 output MemWrite_2DM,
-   // *********************************************************************
-   input stall
-   // *********************************************************************
+	//********************************************************************
+     input stall_IC
+    //********************************************************************
 
 `ifdef HAS_FORWARDING
     ,
     output [31:0] WriteData1_async
 `endif
+
     );
 
 	 //Variables for Memory Module Inputs/Outputs:
@@ -294,7 +295,7 @@ always @(posedge CLK or negedge RESET) begin
 		RegWrite1_OUT <= 0;
 		WriteData1_OUT <= 0;
 		$display("MEM:RESET");
-	end else if(!stall) begin
+	end else if(CLK & !stall_IC) begin
 			Instr1_OUT <= Instr1_IN;
 			Instr1_PC_OUT <= Instr1_PC_IN;
 			WriteRegister1_OUT <= WriteRegister1_IN;
