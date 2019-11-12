@@ -96,17 +96,35 @@ module MIPS (
 `endif
 
         // *********************************************************************
-    wire stall;
+    wire stall_IC;
+    wire stall_DC;
     IC #() IC
         (.clk(CLK),
         .reset(RESET),
-        .stall(STALL_IDIF),
+        .stall(STALL_IDIF | stall_DC),
         .data_addr(Instr_address_2IC),
         .requested_data(Instr1_fIM),
         .request_addr(Instr_address_2IM),
-        .stop(stall),
+        .stop(stall_IC),
         .data(Instr1_fIC));
 
+    DC #() DC
+        (.clk(CLK),
+        .reset(RESET),
+        .stall(STALL_IDIF | stall_IC),
+        .flush(SYS),
+        .data_addr(data_address_2DC),
+        .is_read(read_2DC),
+        .is_write(write_2DC),
+        .data_to_write(data_write_2DC),
+        .is_request(MemRead_2DM),
+        .request_addr(data_address_2DM),
+        .requested_data(data_read_fDM),
+        .is_wb(),
+        .wb_addr(),
+        .wb_data(),
+        .stop(stall_DC),
+        .data(data_read_fDC));
         // *********************************************************************
 
     IF IF(
@@ -115,7 +133,7 @@ module MIPS (
         .Instr1_OUT(Instr1_IFID),
         .Instr_PC_OUT(Instr_PC_IFID),
         .Instr_PC_Plus4(Instr_PC_Plus4_IFID),
-        .STALL(STALL_IDIF | stall),
+        .STALL(STALL_IDIF | stall_IC | stall_DC),
         .Request_Alt_PC(Request_Alt_PC_IDIF),
         .Alt_PC(Alt_PC_IDIF),
         .Instr_address_2IM(Instr_address_2IC),
@@ -199,7 +217,7 @@ module MIPS (
 		.SYS(SYS),
 		.WANT_FREEZE(STALL_IDIF),
     // *********************************************************************
-    .stall_IC(stall)
+    .stall_IC(stall_IC | stall_DC)
     // *********************************************************************
 	);
 
@@ -255,7 +273,7 @@ module MIPS (
 		.ALU_result_async_valid1(ALU_result_async_valid1)
 `endif
     // *********************************************************************
-    ,.stall_IC(stall)
+    ,.stall_IC(stall_IC | stall_DC)
     // *********************************************************************
 	);
 
@@ -320,7 +338,7 @@ module MIPS (
         .WriteData1_async(BypassData1_MEMID)
 `endif
         // *********************************************************************
-        ,.stall_IC(stall)
+        ,.stall_IC(stall_IC | stall_DC)
         // *********************************************************************
     );
 

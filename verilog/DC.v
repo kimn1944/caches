@@ -12,6 +12,7 @@ module DC
     (input clk,
     input reset,
     input stall,
+    input flush,
 
     // general requests
     input [31:0] data_addr,
@@ -82,6 +83,18 @@ module DC
             cache[idx][switch * 32 +:32]        <= lru ? requested_data : cache[idx][switch * 32 +:32];
             cache[idx][551:550] <= lru ? cache[idx][551:550] : 2'b10;
             cache[idx][275:274] <= lru ? 2'b10 : cache[idx][275:274];
+            // dealing with WB
+            if(~lru & cache[idx][550] | lru & cache[idx][274]) begin
+                is_wb   <= 1;
+                wb_addr <= data_addr;
+                wb_data <= cache[idx][550] ? cache[idx][531:276] : cache[idx][255:0];
+            end
+            else begin
+                is_wb   <= 0;
+                wb_addr <= 0;
+                wb_data <= 0;
+            end
+            // end dealing with WB
         end
     end
     // end dealing with miss
@@ -90,20 +103,53 @@ module DC
         if(!stall) begin
             is_request   <= ~ring[0];
             request_addr <= {tag, idx, switch, 2'b00};
-            stop <= ~ring[0];
-            data <= cdata;
+            stop <= ~ring[0] | (j < 1024);
+            // outputting read data
+            if(is_read) begin
+                data <= cdata;
+            end
+            // dealing with write, actually writing
+            else if(is_write) begin
+                cache[idx][ofst * 32 + 276 +:32] <= c1_valid ? data_to_write : cache[idx][ofst * 32 + 276 +:32];
+                cache[idx][ofst * 32 +:32]       <= c2_valid ? data_to_write : cache[idx][ofst * 32 +:32];
+            end
+            // end dealing with write
         end
     end
+
+    // dealing with flush
+    // integer j;
+    // always @(posedge flush) begin
+    //     if(!stall) begin
+    //         j <= 0;
+    //     end
+    // end
+    //
+    // always @(posedge clk) begin
+    //     if(j < 1024 & !stall) begin
+    //         is_wb   <= 1;
+    //         wb_addr <= data_addr;
+    //         wb_data <= cache[idx][550] ? cache[idx][531:276] : cache[idx][255:0];
+    //         j       <= j + 1;
+    //     end
+    // end
+    // end dealing with flush
 
     always @(posedge clk or negedge reset) begin
         if(!reset) begin
             for(i = 0; i < 512; i = i + 1) begin
-                cache[i][551] <= 0;
-                cache[i][275] <= 0;
+                cache[i][551:550] = 0;
+                cache[i][275:274] = 0;
             end
         end
         else if(!stall & hit) begin
+            // update lru
             cache[idx][552] <= c1_valid ? 1 : 0;
+            // updating dirty bit
+            if(is_write) begin
+                cache[idx][550] <= c1_valid ? 1 : 0;
+                cache[idx][274] <= c2_valid ? 1 : 0;
+            end
         end
     end
 
