@@ -101,7 +101,7 @@ module MIPS (
     IC #() IC
         (.clk(CLK),
         .reset(RESET),
-        .stall(STALL_IDIF | stall_DC),
+        .stall(STALL_IDIF),
         .data_addr(Instr_address_2IC),
         .requested_data(Instr1_fIM),
         .request_addr(Instr_address_2IM),
@@ -111,18 +111,20 @@ module MIPS (
     DC #() DC
         (.clk(CLK),
         .reset(RESET),
-        .stall(STALL_IDIF | stall_IC),
+        .stall(STALL_IDIF),
         .flush(SYS),
+        .instr(Instr1_PC_EXEMEM),
         .data_addr(data_address_2DC),
         .is_read(read_2DC),
         .is_write(write_2DC),
         .data_to_write(data_write_2DC),
+        .data_to_write_size(data_write_size_2DC),
         .is_request(MemRead_2DM),
         .request_addr(data_address_2DM),
         .requested_data(data_read_fDM),
-        .is_wb(),
-        .wb_addr(),
-        .wb_data(),
+        .is_wb(dBlkWrite),
+        // .wb_addr(data_address_2DM),
+        .wb_data(block_write_2DM),
         .stop(stall_DC),
         .data(data_read_fDC));
         // *********************************************************************
@@ -294,13 +296,16 @@ module MIPS (
     wire        flush_2DC/*verilator public*/;
     /* verilator lint_on UNUSED */
     wire        data_valid_fDC /*verilator public*/;
-    assign data_write_2DM = data_write_2DC;
-    assign data_address_2DM = data_address_2DC;
-    assign data_write_size_2DM = data_write_size_2DC;
-    assign data_read_fDC = data_read_fDM;
-    assign MemRead_2DM = read_2DC;
-    assign MemWrite_2DM = write_2DC;
+    // assign data_write_2DM = data_write_2DC;
+    // assign data_address_2DM = data_address_2DC;
+    // assign data_write_size_2DM = data_write_size_2DC;
+    // assign data_read_fDC = data_read_fDM;
+    // assign MemRead_2DM = read_2DC;
+    // assign MemWrite_2DM = write_2DC;
     assign data_valid_fDC = 1'b1;
+    // *************************************************************************
+    assign data_write_size_2DM = 0;
+    // *************************************************************************
 
     // assign dBlkRead = 1'b0;
     // assign dBlkWrite = 1'b0;
