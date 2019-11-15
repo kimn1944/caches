@@ -90,10 +90,10 @@ module DC
                 cache[idx][switch * 32 + 276 +:32]  <= lru ? cache[idx][switch * 32 + 276 +:32] : requested_data;
                 cache[idx][switch * 32 +:32]        <= lru ? requested_data : cache[idx][switch * 32 +:32];
                 if(ring == 9'b111111110) begin  // update the tag, valid and dirty bit only after everything has been written back
-                    cache[idx][549:532] <= lru ? cache[idx][549:532] : tag;
-                    cache[idx][273:256] <= lru ? tag : cache[idx][273:256];
-                    cache[idx][551:550] <= lru ? cache[idx][551:550] : 2'b10;
-                    cache[idx][275:274] <= lru ? 2'b10 : cache[idx][275:274];
+                    // cache[idx][549:532] <= lru ? cache[idx][549:532] : tag;
+                    // cache[idx][273:256] <= lru ? tag : cache[idx][273:256];
+                    // cache[idx][551:550] <= lru ? cache[idx][551:550] : 2'b10;
+                    // cache[idx][275:274] <= lru ? 2'b10 : cache[idx][275:274];
                 end
             end
             // end dealing with WB
@@ -178,10 +178,13 @@ module DC
                 data <= cdata;
             end
         end
+    end
+
+    always @(posedge clk) begin
         `ifdef DC_PRINT
             $display("\t\t\t\tDC Output");
             $display("Data Addr: %x, Data: %x, Stop: %x", data_addr, data, stop);
-            $display("Is Read: %x, Is Write: %x, Data to Write: %x", is_read, is_write, data_to_write);
+            $display("Is Read: %x, Is Write: %x, Data to Write: %x, WR Size: %x", is_read, is_write, data_to_write, data_to_write_size);
             $display("Req Addr: %x, Req Data: %x, Is WB: %x", request_addr, requested_data, is_wb);
             $display("Instr: %x, Idx: %x, Tag: %x, Ofst: %x", instr, idx, tag, ofst);
             $display("Cache Val: %x, Cache Data: %x, Cache Tag1: %x, Cache Tag2: %x, Cache Ofst: %d", hit, cdata, cache[idx][549:532], cache[idx][273:256], ofst * 32);
