@@ -90,10 +90,10 @@ module DC
                 cache[idx][switch * 32 + 276 +:32]  <= lru ? cache[idx][switch * 32 + 276 +:32] : requested_data;
                 cache[idx][switch * 32 +:32]        <= lru ? requested_data : cache[idx][switch * 32 +:32];
                 if(ring == 9'b111111110) begin  // update the tag, valid and dirty bit only after everything has been written back
-                    // cache[idx][549:532] <= lru ? cache[idx][549:532] : tag;
-                    // cache[idx][273:256] <= lru ? tag : cache[idx][273:256];
-                    // cache[idx][551:550] <= lru ? cache[idx][551:550] : 2'b10;
-                    // cache[idx][275:274] <= lru ? 2'b10 : cache[idx][275:274];
+                    cache[idx][549:532] <= lru ? cache[idx][549:532] : tag;
+                    cache[idx][273:256] <= lru ? tag : cache[idx][273:256];
+                    cache[idx][551:550] <= lru ? cache[idx][551:550] : 2'b10;
+                    cache[idx][275:274] <= lru ? 2'b10 : cache[idx][275:274];
                 end
             end
             // end dealing with WB
@@ -106,15 +106,17 @@ module DC
     always @ * begin
         if(!stall) begin
             stop <= ~ring[0] | (j < 1024);
-            if(~lru & cache[idx][550] | lru & cache[idx][274]) begin
-                is_wb   <= 1;
-                request_addr <= lru ? {cache[idx][273:256], idx, 5'b00000} : {cache[idx][549:532], idx, 5'b00000};
-                wb_data <= lru ? cache[idx][255:0] : cache[idx][531:276];
-            end
-            else begin
-                is_request   <= ~ring[0];
-                request_addr <= {tag, idx, switch, 2'b00};
-                is_wb        <= 0;
+            if(is_read | is_write) begin
+                if(~lru & cache[idx][550] | lru & cache[idx][274]) begin
+                    is_wb   <= 1;
+                    request_addr <= lru ? {cache[idx][273:256], idx, 5'b00000} : {cache[idx][549:532], idx, 5'b00000};
+                    wb_data <= lru ? cache[idx][255:0] : cache[idx][531:276];
+                end
+                else begin
+                    is_request   <= ~ring[0];
+                    request_addr <= {tag, idx, switch, 2'b00};
+                    is_wb        <= 0;
+                end
             end
             // assigning write value
             if(is_write) begin
