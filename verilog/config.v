@@ -21,7 +21,3 @@
 //Added before project 4 starts
 //`define OUT_OF_ORDER
 
-
-// my configs
-// `define DELAYER_PRINT
-// `define IC_PRINT
