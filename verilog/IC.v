@@ -1,5 +1,5 @@
 /*
-File: CACHE.v
+File: IC.v
 Author: Nikita Kim
 Email: kimn1944@gmail.com
 Date: 11/8/19
